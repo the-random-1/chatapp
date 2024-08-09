@@ -1,0 +1,304 @@
+body {
+    background-color: #8CD8FF;
+    text-align: center;
+    font-family: "Roboto Slab", serif;
+}
+
+body, body * {
+    user-select: none;
+}
+
+h1 {
+    font-size: 230%;
+}
+
+#help, #public, #chat, #notifications, #nameclaimer, #passchanger, #namesaver, #settings {
+    display: none;
+}
+
+#passMain, #passPublic, #passNotif, #passSave {
+    display: none;
+}
+
+#chat {
+    padding-top: 0;
+}
+
+#public {
+    height: 490px;
+}
+
+#namesaver {
+    height: 325px;
+}
+
+#nameclaimer {
+    height: 350px;
+}
+
+.con {
+    background-color: white;
+    margin: auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    border: 4px solid black;
+    border-radius: 15px;
+    max-width: 400px;
+    padding: 10px 15px;
+}
+
+.elemn {
+    padding: 8px 12px;
+    width: fit-content;
+    margin: 10px auto auto auto;
+}
+
+.load {
+    animation: spin 750ms linear 0s infinite;
+}
+
+.inp {
+    border-radius: 7px;
+    border: 2px solid black;
+    background-color: #EEE;
+}
+
+.inp2 {
+    border-radius: 7px;
+    border: 2px solid black;
+    background-color: #EEE;
+    color: #888;
+    padding: 8px 30px 8px 10px;
+    width: 190px;
+    text-align: left;
+}
+
+.btn {
+    background-color: white;
+    border-radius: 7px;
+    border: 2px solid black;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.textDisplay {
+    background-color: #fbfbfb;
+    color: black;
+    font-family: "Outfit", sans-serif;
+    border: 2px solid black;
+    flex-wrap: wrap;
+    text-align: left;
+    padding: 5px;
+    font-size: 15px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    overflow: auto;
+    user-select: text;
+}
+
+
+
+/* Main Screen */
+
+#tutor, #backHelp {
+    background-color: #DDD;
+}
+
+#notifrowMain, #notifrowHelp {
+    align-items: center;
+    align-self: center;
+}
+
+#notifrowMain *:not(button), #notifrowHelp *:not(button) {
+    margin-left: 10px;
+}
+
+#notifrowMain svg, #notifrowMain img {
+    display: none;
+}
+
+#publicMain, #publicspanHelp {
+    color: blue;
+    cursor: pointer;
+}
+
+/* Chat Screen */
+
+#roomChat {
+    font-size: 30px;
+    margin: 12px auto 5px auto;
+    font-family: "Josefin Sans";
+}
+
+#chatChat {
+    height: 450px;
+}
+
+#msgChat {
+    margin-right: 5px;
+}
+
+#sendChat {
+    display: none;
+    margin-left: 5px;
+}
+
+/* Public Screen */
+
+#optPublic {
+    height: 100px;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.puboptionhead {
+    font-weight: 500;
+    font-size: 85%;
+}
+
+.puboptiontext {
+    font-weight: 300;
+    font-size: 60%;
+    width: 80%;
+    margin: 10px auto;
+}
+
+.puboption {
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    width: 30%;
+    height: 90px;
+}
+
+.puboption, .puboption * {
+    cursor: pointer;
+}
+
+#genpub {
+    color: #F5B623;
+    border: 2px solid #F5B623;
+}
+
+/* Notifications Screen */
+
+#nameNotif {
+    margin-top: -15px;
+}
+
+#addNotif {
+    margin-right: 5px;
+}
+
+#removeNotif {
+    margin-left: 5px;
+}
+
+#idlistNotif {
+    font-size: 80%;
+}
+
+#listNotif {
+    height: 140px;
+    margin-top: 10px;
+}
+
+/* Name Claiming Screen */
+
+#claimClaim {
+    background-color: #5D7AFC;
+    color: white;
+    font-weight: 600;
+}
+
+/* Back buttons */
+
+#backPublic, #backNotif, #backClaim, #backChange, #backSave, #backSettings {
+    position: absolute;
+}
+
+#backPublic {
+    margin-top: 450px;
+}
+
+#backNotif {
+    margin-right: 100px;
+}
+
+#backClaim {
+    margin-right: 100px;
+    margin-top: 315px;
+}
+
+#backChange {
+    margin-right: 100px;
+    margin-top: 330px;
+}
+
+#backSave {
+    margin-top: 290px;
+}
+
+#backSettings {
+    margin-right: 100px;
+}
+
+/* Settings screen */
+
+#optSettings {
+    border-collapse: collapse;
+    border-radius: 150px;
+}
+
+#optSettings tr td {
+    background-color: white;
+    border: 2px solid black;
+    padding: 7px;
+}
+
+.descSettings {
+    width: 70%;
+    text-align: left;
+}
+
+.checkSettings {
+    width: 30%;
+}
+
+#settings select {
+    background-color: white;
+    color: black;
+    border-radius: 5px;
+    border: 1.5px solid black;
+    padding: 3px;
+    cursor: pointer;
+    font-size: 70%;
+}
+
+#bgSettings {
+    background: white;
+    border: 1.5px solid black;
+    padding: 1px 3px;
+}
+
+#settings input {
+    cursor: pointer;
+}
+
+#settings input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+/* Animation */
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

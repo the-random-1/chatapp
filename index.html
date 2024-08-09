@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html>
+  	<head>
+		<title>Chat App 3.0</title>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="style.css">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Outfit:wght@100..900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	</head>
+	<body>
+		<script type="module">
+			let snapshotval = 0;
+			import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+			import { getDatabase, ref, get, set, child, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+			// Your web app's Firebase configuration
+			const firebaseConfig = {
+				apiKey: "AIzaSyCRFHJjJFkk3RjoFbJIxB7uJ6TqH2sUjqo",
+				authDomain: "chat-app-3000.firebaseapp.com",
+				databaseURL: "https://chat-app-3000-default-rtdb.firebaseio.com",
+ 		  		projectId: "chat-app-3000",
+  				storageBucket: "chat-app-3000.appspot.com",
+ 	 			messagingSenderId: "919515506137",
+ 	 		 	appId: "1:919515506137:web:56b6f95dd13dc7a4fae5c8"
+			};
+
+			// Initialize Firebase
+			const app = initializeApp(firebaseConfig);
+			const db = getDatabase(app);
+
+			function saveData(targetkey, targetvalue) {
+				set(ref(db, targetkey), targetvalue);
+			}
+
+			function removeData(targetkey) {
+				remove(ref(db, targetkey));
+			}
+
+			// ----------------
+			// Functionability
+			// ----------------
+			
+			// All screens
+
+				// Autofill if there is a saved name
+
+			if (localStorage.name && localStorage.name != "") {
+				nameMain.value = localStorage.name;
+				passMain.value = localStorage.pass;
+				passMain.style.display = "block";
+
+				namePublic.value = localStorage.name;
+				passPublic.value = localStorage.pass;
+				passPublic.style.display = "block";
+
+				nameChange.value = localStorage.name;
+				oldpassChange.value = localStorage.pass;
+				oldpassChange.style.display = "block";
+
+				nameNotif.value = localStorage.name;
+				passNotif.value = localStorage.pass;
+				passNotif.style.display = "block";
+
+				nameSave.value = localStorage.name;
+				passSave.value = localStorage.pass;
+				passSave.style.display = "block";
+			}
+
+				// Autofill settings if saved locally ...
+
+			if (localStorage.textsize && localStorage.textsize != "") {
+				let alltextdisplays = document.getElementsByClassName("textDisplay");
+				for (let txtdisplay of alltextdisplays) {
+					txtdisplay.style.fontSize = localStorage.textsize;
+					txtdisplay.style.fontFamily = localStorage.font;
+				}
+
+				chatdelimiter = localStorage.chatdelimiter;
+
+				document.getElementsByTagName("body")[0].style.backgroundColor = localStorage.bg;
+
+				dnt = localStorage.dnt;
+				
+				let allinputs = document.getElementsByTagName("input");
+				for (let currinp of allinputs) {
+					if ((currinp.type == "text" || currinp.type == "password") && currinp.id.substring(0, 4) == "pass") {
+						if (localStorage.hidepass == "true") {
+							currinp.type = "password";
+						} else {
+							currinp.type = "text";
+						}
+					}
+				}
+
+				textsizeSettings.value = localStorage.textsize;
+				fontSettings.value = localStorage.font;
+				chatdelimiterSettings.value = localStorage.chatdelimiter;
+				bgSettings.value = localStorage.bg;
+				dntSettings.checked = localStorage.dnt;
+				hidepassSettings.checked = localStorage.hidepass;
+			}
+
+				// ... or globally
+
+			if (localStorage.name && localStorage.name != "") {
+				get(child(ref(db), "personalsettings/" + localStorage.name)).then((value) => {
+					value = value.val();
+
+					if (value && value !== null) {
+						let alltextdisplays = document.getElementsByClassName("textDisplay");
+						for (let txtdisplay of alltextdisplays) {
+							txtdisplay.style.fontSize = value.textsize;
+							txtdisplay.style.fontFamily = value.font;
+						}
+
+						chatdelimiter = value.chatdelimiter;
+
+						document.getElementsByTagName("body")[0].style.backgroundColor = value.bg;
+
+						dnt = value.dnt;
+
+						let allinputs = document.getElementsByTagName("input");
+						for (let currinp of allinputs) {
+							if ((currinp.type == "text" || currinp.type == "password") && currinp.id.substring(0, 4) == "pass") {
+								if (value.hidepass == true) {
+									currinp.type = "password";
+								} else {
+									currinp.type = "text";
+								}
+							}
+						}
+
+						textsizeSettings.value = value.textsize;
+						fontSettings.value = value.font;
+						chatdelimiterSettings.value = value.chatdelimiter;
+						bgSettings.value = value.bg;
+						dntSettings.checked = value.dnt;
+						hidepassSettings.checked = value.hidepass;
+					}
+				});
+			}
+
+				// Check for unread notifications
+
+			function checkNotifs() {
+				if (localStorage.name && localStorage.name != "") {
+					get(child(ref(db), "usernotifications/" + localStorage.name + "/notificationlist/list")).then((ridlist) => {
+						ridlist = ridlist.val();
+
+						if (ridlist != "") {
+							nloadMain.style.display = "block";
+
+							ridlist = ridlist.split("«");
+							let currrid = 0;
+							let interval = setInterval(function() {
+								let currid = ridlist[currrid];
+								get(child(ref(db), currid)).then((actualmsgnum) => {
+									if (actualmsgnum.val() !== null) {
+										actualmsgnum = Object.values(actualmsgnum.val()).length;
+									} else {
+										actualmsgnum = 0;
+									}
+
+									get(child(ref(db), "usernotifications/" + localStorage.name + "/" + currid + "/msgnum")).then((storedmsgnum) => {
+										storedmsgnum = storedmsgnum.val();
+
+										if (actualmsgnum > storedmsgnum) {
+											saveData("usernotifications/" + localStorage.name + "/" + currid + "/msgnum", actualmsgnum);
+											get(child(ref(db), "usernotifications/" + localStorage.name + "/notificationlist/displaylist")).then((notifslist) => {
+												if (notifslist.val() !== null) {
+													notifslist = Object.values(notifslist.val()).length;
+												} else {
+													notifslist = 0;
+												}
+												
+												saveData("usernotifications/" + localStorage.name + "/notificationlist/displaylist/" + notifslist, "There " + (actualmsgnum - storedmsgnum == 1 ? "is " : "are ") + (actualmsgnum - storedmsgnum) + " new message" + (actualmsgnum - storedmsgnum == 1 ? "" : "s") + " in this Room ID: (" + currid + ")");
+											});
+
+											nalertMain.style.display = "block";
+										}
+										
+										if (currrid == ridlist.length) {
+											nloadMain.style.display = "none";
+										} else {
+											nloadMain.style.display = "block";
+										}
+
+										
+									});
+								});
+								++currrid;
+								if (currrid == ridlist.length) {
+									clearInterval(interval);
+								}
+							}, 200);
+						}
+					});
+				}
+			}
+			checkNotifs();
+
+			// Main screen
+
+				// Password detection
+
+			nameMain.oninput = () => {
+				get(child(ref(db), "nameclaiming/" + nameMain.value)).then((value) => {
+					value = value.val();
+					if (value === null || nameMain.value == "") {
+						passMain.style.display = "none";
+					} else {
+						passMain.style.display = "block";
+					}
+				});
+			}
+
+				// Add to onclick
+
+			let btns = document.getElementsByTagName("button");
+			for (let currbtn of btns) {
+				if (currbtn.getAttribute("onclick") == "changeScreen('main');") {
+					currbtn.onclick = function() {changeScreen('main');checkNotifs();}
+				}
+			}
+			notifMain.onclick = function() {changeScreen('notifications');showlistedids(localStorage.name)};
+
+			// Public screen
+
+				// Password detection
+
+			namePublic.oninput = () => {
+				get(child(ref(db), "nameclaiming/" + namePublic.value)).then((value) => {
+					value = value.val();
+					if (value === null || namePublic.value == "") {
+						passPublic.style.display = "none";
+					} else {
+						passPublic.style.display = "block";
+					}
+				});
+			}
+
+			// Chat screen
+
+			msgChat.oninput = () => {
+				if (msgChat.value != "") {
+					sendChat.style.display = "inline";
+				} else {
+					sendChat.style.display = "none";
+				}
+			}
+
+			sendChat.onclick = () => {
+				get(child(ref(db), roomid)).then((indexofmsg) => {
+					if (indexofmsg.val() !== null) {
+						indexofmsg = Object.keys(indexofmsg.val()).length;
+					} else {
+						indexofmsg = 0;
+					}
+
+					const d = new Date();
+
+					let ampm = "AM";
+
+					let year = d.getFullYear();
+					let month = d.getMonth() + 1;
+					let date = d.getDate();
+
+					let hour = d.getHours();
+					if (hour >= 12) {
+						ampm = "PM";
+						if (hour != 12) {
+							hour -= 12;
+						}
+					} else if (hour == 0) {
+						hour = 12;
+					}
+					let minute = d.getMinutes();
+					if (minute < 10) {
+						minute = "0" + String(minute);
+					}
+
+					let datentime = ` (${month}/${date}/${year} ${hour}:${minute} ${ampm})`;
+
+					saveData(roomid + "/" + indexofmsg, name + ": " + msgChat.value + datentime);
+
+					msgChat.value = "";
+				});
+			}
+
+			// Notifications screen
+
+				// Autofill
+
+			function showlistedids(usename) {
+				if (usename && usename != "") {
+					get(child(ref(db), "usernotifications/" + usename + "/notificationlist/list")).then((value) => {
+						if (value.val() !== null) {
+							value = value.val().split("«").join(", ");
+							idlistNotif.innerText = value;
+						} else {
+							idlistNotif.innerText = "";
+						}
+					});
+
+					let actualchatdelimiter = "<br>";
+
+					let usedchatdelimiter;
+
+					get(child(ref(db), "personalsettings/" + usename + "/chatdelimiter")).then((value) => {
+						usedchatdelimiter = value.val();
+						if (usedchatdelimiter == "oneline") {
+							actualchatdelimiter = "<br>";
+						} else if (usedchatdelimiter == "twoline") {
+							actualchatdelimiter = "<br><br>";
+						} else if (usedchatdelimiter == "horizontalline") {
+							actualchatdelimiter = "<br><hr>";
+						} else if (usedchatdelimiter == "horizontallinespace") {
+							actualchatdelimiter = "<br><br><hr><br>";
+						}
+						
+						get(child(ref(db), "usernotifications/" + usename + "/notificationlist/displaylist")).then((value2) => {
+							if (value2.val() !== null) {
+								value2 = Object.values(value2.val()).join(actualchatdelimiter);
+								listNotif.innerHTML = value2;
+							} else {
+								listNotif.innerHTML = "";
+							}
+						});
+					});
+				}
+			}
+
+			if (localStorage.name && localStorage.name != "") {
+				showlistedids(localStorage.name);
+			}
+
+			nameNotif.oninput = () => {
+
+				// Password detection
+
+				get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((value) => {
+					value = value.val();
+					if (value === null || nameNotif.value == "") {
+						passNotif.style.display = "none";
+					} else {
+						passNotif.style.display = "block";
+					}
+				});
+
+				// Autofill
+
+				if (nameNotif.value != "" && !nameNotif.value.includes(":") && !nameNotif.value.includes("/")) {
+					get(child(ref(db), "usernotifications/" + nameNotif.value)).then((valu) => {
+						if (valu.val() !== null) {
+							get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((valu2) => {
+								if (valu2.val() !== null) {
+									if (passNotif.value == valu2.val()) {
+										showlistedids(nameNotif.value);
+									} else {
+										idlistNotif.innerText = "";
+										listNotif.innerHTML = "";
+									}
+								} else {
+									showlistedids(nameNotif.value);
+								}
+							});
+						} else {
+							idlistNotif.innerText = "";
+							listNotif.innerHTML = "";
+						}
+					});
+				}
+			}
+
+			passNotif.oninput = () => {
+				if (nameNotif.value != "" && !nameNotif.value.includes(":") && !nameNotif.value.includes("/")) {
+					get(child(ref(db), "usernotifications/" + nameNotif.value)).then((valu) => {
+						if (valu.val() !== null) {
+							get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((valu2) => {
+								if (valu2.val() !== null) {
+									if (passNotif.value == valu2.val()) {
+										showlistedids(nameNotif.value);
+									} else {
+										idlistNotif.innerText = "";
+										listNotif.innerHTML = "";
+									}
+								} else {
+									showlistedids(nameNotif.value);
+								}
+							});
+						} else {
+							idlistNotif.innerText = "";
+							listNotif.innerHTML = "";
+						}
+					});
+				}
+			}
+
+				// Add room id to list
+
+			addNotif.onclick = () => {
+				if (nameNotif.value != "" && !nameNotif.value.includes(":") && !nameNotif.value.includes("/")) {
+					get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((namepass) => {
+						namepass = namepass.val();
+
+						if (namepass !== null) {
+							if (passNotif.value == namepass) {
+								if (roomNotif.value != "" && !roomNotif.value.includes("/") && roomNotif.value.length >= 4 && roomNotif.value.length < 12) {
+									get(child(ref(db), "usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum")).then((msgnum) => {
+										msgnum = msgnum.val();
+										if (msgnum === null) {
+											get(child(ref(db), roomNotif.value)).then((msgcount) => {
+												if (msgcount.val() !== null) {
+													msgcount = Object.values(msgcount.val()).length;
+												} else {
+													msgcount = 0;
+												}
+
+												saveData("usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum", msgcount);
+												get(child(ref(db), "usernotifications/" + nameNotif.value + "/notificationlist/list")).then((userlist) => {
+													userlist = userlist.val();
+
+													if (userlist !== null) {
+														saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", userlist + "«" + roomNotif.value);
+													} else {
+														saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", roomNotif.value);
+													}
+
+													showlistedids(nameNotif.value);
+												});
+
+												Swal.fire({
+													title: "Success!",
+													text: "You have successfully added a room ID to your notification list.",
+													icon: "success"
+												});
+											});
+										} else {
+											Swal.fire({
+												title: "Invalid Room ID",
+												text: "You have already added this room ID to your notification list.",
+												icon: "warning"
+											});
+										}
+									});
+								} else {
+									Swal.fire({
+										title: "Invalid Room ID",
+										text: "Room IDs must be at least 4 characters and less than 12 characters long. They cannot include a '/' symbol.",
+										icon: "warning"
+									});
+								}
+
+								showlistedids(nameNotif.value);
+							} else {
+								Swal.fire({
+									title: "Incorrect",
+									text: "The password you have entered is incorrect.",
+									icon: "error"
+								});
+							}
+						} else {
+							if (roomNotif.value != "" && !roomNotif.value.includes("/") && roomNotif.value.length >= 4 && roomNotif.value.length < 12) {
+								get(child(ref(db), "usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum")).then((msgnum) => {
+									msgnum = msgnum.val();
+									if (msgnum === null) {
+										get(child(ref(db), roomNotif.value)).then((msgcount) => {
+											if (msgcount.val() !== null) {
+												msgcount = Object.values(msgcount.val()).length;
+											} else {
+												msgcount = 0;
+											}
+
+											saveData("usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum", msgcount);
+											get(child(ref(db), "usernotifications/" + nameNotif.value + "/notificationlist/list")).then((userlist) => {
+												userlist = userlist.val();
+
+												if (userlist !== null) {
+													saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", userlist + "«" + roomNotif.value);
+												} else {
+													saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", roomNotif.value);
+												}
+
+												showlistedids(nameNotif.value);
+											});
+											
+											Swal.fire({
+												title: "Success!",
+												text: "You have successfully added a room ID to your notification list.",
+												icon: "success"
+											});
+										});
+									} else {
+										Swal.fire({
+											title: "Invalid Room ID",
+											text: "You have already added this room ID to your notification list.",
+											icon: "warning"
+										});
+									}
+								});
+							} else {
+								Swal.fire({
+									title: "Invalid Room ID",
+									text: "Room IDs must be at least 4 characters and less than 12 characters long. They cannot include a '/' symbol.",
+									icon: "warning"
+								});
+							}
+
+							showlistedids(nameNotif.value);
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "Invalid Name",
+						text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+						icon: "warning"
+					});
+				}
+			}
+
+				// Remove room id from list
+
+			removeNotif.onclick = () => {
+				if (nameNotif.value != "" && !nameNotif.value.includes(":") && !nameNotif.value.includes("/")) {
+					get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((namepass) => {
+						namepass = namepass.val();
+
+						if (namepass !== null) {
+							if (passNotif.value == namepass) {
+								if (roomNotif.value != "" && !roomNotif.value.includes("/") && roomNotif.value.length >= 4 && roomNotif.value.length < 12) {
+									get(child(ref(db), "usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum")).then((msgnum) => {
+										msgnum = msgnum.val();
+										if (msgnum !== null) {
+											saveData("usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum", null);
+
+											get(child(ref(db), "usernotifications/" + nameNotif.value + "/notificationlist/list")).then((notiflist) => {
+												notiflist = notiflist.val();
+
+												if (notiflist !== null) {
+													let newnotiflist = notiflist;
+													newnotiflist = newnotiflist.split("«");
+													newnotiflist.splice(newnotiflist.indexOf(roomNotif.value), 1);
+													newnotiflist = newnotiflist.join("«");
+													saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", newnotiflist);
+												}
+
+												showlistedids(nameNotif.value);
+											});
+
+											Swal.fire({
+												title: "Success!",
+												text: `You have successfully removed ${roomNotif.value} from your notification list.`,
+												icon: "success"
+											});
+										} else {
+											Swal.fire({
+												title: "Invalid Room ID",
+												text: "You do not have this room ID in your notification list.",
+												icon: "warning"
+											});
+										}
+									});
+								} else {
+									Swal.fire({
+										title: "Invalid Room ID",
+										text: "Room IDs must be at least 4 characters and less than 12 characters long. They cannot include a '/' symbol.",
+										icon: "warning"
+									});
+								}
+							} else {
+								Swal.fire({
+									title: "Incorrect",
+									text: "The password you have entered is incorrect.",
+									icon: "error"
+								});
+							}
+						} else {
+							if (roomNotif.value != "" && !roomNotif.value.includes("/") && roomNotif.value.length >= 4 && roomNotif.value.length < 12) {
+								get(child(ref(db), "usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum")).then((msgnum) => {
+									msgnum = msgnum.val();
+									if (msgnum !== null) {
+										saveData("usernotifications/" + nameNotif.value + "/" + roomNotif.value + "/msgnum", null);
+
+										get(child(ref(db), "usernotifications/" + nameNotif.value + "/notificationlist/list")).then((notiflist) => {
+											notiflist = notiflist.val();
+
+											if (notiflist !== null) {
+												let newnotiflist = notiflist;
+												newnotiflist = newnotiflist.split("«");
+												newnotiflist.splice(newnotiflist.indexOf(roomNotif.value), 1);
+												newnotiflist = newnotiflist.join("«");
+												saveData("usernotifications/" + nameNotif.value + "/notificationlist/list", newnotiflist);
+											}
+
+											showlistedids(nameNotif.value);
+										});
+
+										Swal.fire({
+											title: "Success!",
+											text: `You have successfully removed ${roomNotif.value} from your notification list.`,
+											icon: "success"
+										});
+									} else {
+										Swal.fire({
+											title: "Invalid Room ID",
+											text: "You do not have this room ID in your notification list.",
+											icon: "warning"
+										});
+									}
+								});
+							} else {
+								Swal.fire({
+									title: "Invalid Room ID",
+									text: "Room IDs must be at least 4 characters and less than 12 characters long. They cannot include a '/' symbol.",
+									icon: "warning"
+								});
+							}
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "Invalid Name",
+						text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+						icon: "warning"
+					});
+				}
+			}
+
+				// Clear notifications
+
+			clearNotif.onclick = () => {
+				if (nameNotif.value != "" && !nameNotif.value.includes(":") && !nameNotif.value.includes("/")) {
+					get(child(ref(db), "nameclaiming/" + nameNotif.value)).then((value) => {
+						value = value.val();
+
+						if (value !== null) {
+							if (value == passNotif.value) {
+								Swal.fire({
+									title: "Notifications",
+									text: "Are you sure you want to clear your notifications?",
+									showDenyButton: true,
+									confirmButtonText: "Yes",
+									denyButtonText: "No"
+								}).then((result) => {
+									if (result.isConfirmed) {
+										saveData("usernotifications/" + nameNotif.value + "/notificationlist/displaylist", null);
+										showlistedids(localStorage.name);
+									}
+								});
+							} else {
+								Swal.fire({
+									title: "Incorrect",
+									text: "The password you have entered is incorrect.",
+									icon: "error"
+								});
+							}
+						} else {
+							Swal.fire({
+								title: "Notifications",
+								text: "Are you sure you want to clear your notifications?",
+								showDenyButton: true,
+								confirmButtonText: "Yes",
+								denyButtonText: "No"
+							}).then((result) => {
+								if (result.isConfirmed) {
+									saveData("usernotifications/" + nameNotif.value + "/notificationlist/displaylist", null);
+									showlistedids(localStorage.name);
+								}
+							});
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "Invalid Name",
+						text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+						icon: "warning"
+					});
+				}
+			}
+			
+			// Name claimer screen
+
+				// Name claiming function
+
+			claimClaim.onclick = () => {
+				if (nameClaim.value != "" && !nameClaim.value.includes("/") && !nameClaim.value.includes(":")) {
+					get(child(ref(db), "nameclaiming/" + nameClaim.value)).then((value) => {
+						value = value.val();
+
+						if (value === null) {
+							saveData("nameclaiming/" + nameClaim.value, passClaim.value);
+							Swal.fire({
+								title: "Success!",
+								text: "You have successfully claimed your name.",
+								icon: "success"
+							});
+						} else {
+							Swal.fire({
+								title: "Name already claimed",
+								text: "Your name has already been claimed.",
+								icon: "warning"
+							});
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "Invalid Name",
+						text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+						icon: "warning"
+					});
+				}
+			}
+
+			// Password changer screen
+
+			changeChange.onclick = () => {
+				if (nameChange.value != "" && !nameChange.value.includes("/") && !nameChange.value.includes(":")) {
+					get(child(ref(db), "nameclaiming/" + nameChange.value)).then((value) => {
+					value = value.val();
+
+						if (value !== null) {
+							if (oldpassChange.value == value) {
+								if (newpassChange.value == confirmpassChange.value) {
+									if (newpassChange.value != "") {
+										saveData("nameclaiming/" + nameChange.value, confirmpassChange.value);
+										Swal.fire({
+											title: "Success!",
+											text: "You have successfully changed your password.",
+											icon: "success"
+										});
+									} else {
+										Swal.fire({
+										title: "Invalid Password",
+										text: "Your new password cannot be empty.",
+										icon: "warning"
+									});
+									}
+								} else {
+									Swal.fire({
+										title: "Incorrect",
+										text: "The new password does not match in the confirm password box.",
+										icon: "error"
+									});
+								}
+							} else {
+								Swal.fire({
+									title: "Incorrect",
+									text: "The old password you have entered is incorrect.",
+									icon: "error"
+								});
+							}
+						} else {
+							Swal.fire({
+								title: "Error",
+								text: "The entered name does not have a registered password.",
+								icon: "error"
+							});
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "Invalid Name",
+						text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+						icon: "warning"
+					});
+				}
+			};
+
+			// Name saver screen
+
+				// Password detection
+
+			nameSave.oninput = function() {
+				get(child(ref(db), "nameclaiming/" + nameSave.value)).then((value) => {
+					value = value.val();
+					if (value === null || nameSave.value == "") {
+						passSave.style.display = "none";
+					} else {
+						passSave.style.display = "block";
+					}
+				});
+			}
+
+				// Name save function
+
+			function save(ac) {
+				if (ac == "save") {
+					if (nameSave.value != "" && !nameSave.value.includes("/") && !nameSave.value.includes(":")) {
+						get(child(ref(db), "nameclaiming/" + nameSave.value)).then((value) => {
+							value = value.val();
+							if (passSave.style.display != "none") {
+								if (passSave.value == value) {
+									localStorage.name = nameSave.value;
+									localStorage.pass = passSave.value;
+									Swal.fire({
+										title: "Success!",
+										text: "You have successfully saved your name for future use.",
+										icon: "success"
+									});
+								} else {
+									Swal.fire({
+										title: "Incorrect Password",
+										text: "The password you have entered is incorrect. Please try again.",
+										icon: "error"
+									});
+								}
+							} else {
+								localStorage.name = nameSave.value;
+								localStorage.pass = passSave.value;
+								Swal.fire({
+									title: "Success!",
+									text: "You have successfully saved your name for future use.",
+									icon: "success"
+								});
+							}
+						});
+					} else {
+						Swal.fire({
+							title: "Invalid Name",
+							text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+							icon: "warning"
+						});
+					}
+				} else if (ac == "unsave") {
+					localStorage.name = "";
+					localStorage.pass = "";
+
+					Swal.fire({
+						title: "Success!",
+						text: "You have successfully unsaved your name, disabling future use.",
+						icon: "success"
+					});
+				}
+			}
+
+			saveSave.onclick = () => {save("save")};
+			unsaveSave.onclick = () => {save("unsave")};
+
+			// Settings screen
+
+				// Text size
+			
+			textsizeSettings.oninput = () => {
+				let alltextdisplays = document.getElementsByClassName("textDisplay");
+				for (let txtdisplay of alltextdisplays) {
+					txtdisplay.style.fontSize = textsizeSettings.value;
+				}
+			}
+
+				// Font
+
+			fontSettings.oninput = () => {
+				let alltextdisplays = document.getElementsByClassName("textDisplay");
+				for (let txtdisplay of alltextdisplays) {
+					txtdisplay.style.fontFamily = fontSettings.value;
+				}
+			}
+
+				// Chat line seperation
+
+			chatdelimiterSettings.oninput = () => {
+				chatdelimiter = chatdelimiterSettings.value;
+			}
+
+				// Background color
+
+			bgSettings.oninput = () => {
+				document.getElementsByTagName("body")[0].style.backgroundColor = bgSettings.value;
+			}
+			
+				// Show/Hide date and time in messages
+
+			dntSettings.oninput = () => {
+				dnt = dntSettings.checked;
+			}
+
+				// Hide passwords
+
+			hidepassSettings.oninput = () => {
+				let allinputs = document.getElementsByTagName("input");
+				for (let currinp of allinputs) {
+					if ((currinp.type == "text" || currinp.type == "password") && currinp.id.substring(0, 4) == "pass") {
+						if (hidepassSettings.checked) {
+							currinp.type = "password";
+						} else {
+							currinp.type = "text";
+						}
+					}
+				}
+			}
+			
+				// Save Settings function
+
+			saveSettings.onclick = (() => {
+				if (localStorage.name && localStorage.name != "") {
+					saveData("personalsettings/" + localStorage.name, {
+						textsize: textsizeSettings.value,
+						font: fontSettings.value,
+						chatdelimiter: chatdelimiterSettings.value,
+						bg: bgSettings.value,
+						dnt: dntSettings.checked,
+						hidepass: hidepassSettings.checked
+					});
+
+					Swal.fire({
+						title: "Success!",
+						text: "You have successfully saved your settings globally.",
+						icon: "success"
+					});
+				} else {
+					Swal.fire({
+						title: "No saved name",
+						text: "In order to globally save your settings, you must have already saved a name. Do you want to save your settings locally?",
+						showDenyButton: true,
+						confirmButtonText: "Yes",
+						denyButtonText: "No"
+					}).then((result) => {
+						if (result.isConfirmed) {
+							localStorage.textsize = textsizeSettings.value;
+							localStorage.font = fontSettings.value;
+							localStorage.chatdelimiter = chatdelimiterSettings.value;
+							localStorage.bg = bgSettings.value;
+							localStorage.dnt = dntSettings.checked;
+							localStorage.hidepass = hidepassSettings.checked;
+
+							Swal.fire({
+								title: "Success!",
+								text: "You have successfully saved your settings locally.",
+								icon: "success"
+							});
+						}
+					});
+				}
+			});
+
+			savelocalSettings.onclick = () => {
+				localStorage.textsize = textsizeSettings.value;
+				localStorage.font = fontSettings.value;
+				localStorage.chatdelimiter = chatdelimiterSettings.value;
+				localStorage.bg = bgSettings.value;
+				localStorage.dnt = dntSettings.checked;
+				localStorage.hidepass = hidepassSettings.checked;
+
+				Swal.fire({
+					title: "Success!",
+					text: "You have successfully saved your settings locally.",
+					icon: "success"
+				});
+			}
+				
+				// Unsave locally function
+
+			unsavelocalSettings.onclick = () => {
+				Swal.fire({
+					title: "Local Unsave",
+					text: "Are you sure you want unsave your local settings?",
+					showDenyButton: true,
+					confirmButtonText: "Yes",
+					denyButtonText: "No"
+				}).then((result) => {
+					if (result.isConfirmed) {
+						localStorage.textsize = "";
+						localStorage.font = "";
+						localStorage.chatdelimiter = "";
+						localStorage.bg = "";
+						localStorage.dnt = "";
+						localStorage.hidepass = "";
+						Swal.fire({
+							title: "Success!",
+							text: "You have successfully unsaved your local settings.",
+							icon: "success"
+						});
+					}
+				});
+			}
+
+				// Unsave globally function
+
+			unsaveglobalSettings.onclick = () => {
+				if (localStorage.name && localStorage.name != "") {
+					Swal.fire({
+						title: "Global Unsave",
+						text: "Are you sure you want unsave your global settings?",
+						showDenyButton: true,
+						confirmButtonText: "Yes",
+						denyButtonText: "No"
+					}).then((result) => {
+						if (result.isConfirmed) {
+							saveData("personalsettings/" + localStorage.name, null);
+							Swal.fire({
+								title: "Success!",
+								text: "You have successfully unsaved your global settings.",
+								icon: "success"
+							});
+						}
+					});
+				} else {
+					Swal.fire({
+						title: "No saved name",
+						text: "In order to have or reset global settings, you first must save a name for future use.",
+						icon: "warning"
+					});
+				}
+			}
+
+			// Enter chat function
+
+				// Remove date and time function
+
+				function hidednt(arr) {
+					if (!dnt) {
+						let newarr = [];
+
+						(1);
+
+						for (let msge of arr) {
+							let dateindex = msge.length;
+							while (msge.charAt(dateindex) != "(") {
+								--dateindex;
+							}
+							newarr.push(msge.substring(0, dateindex));
+						}
+
+						return newarr;
+					}
+					
+					return arr;
+				}
+
+			function enterChat(np) {
+				if (np == "normal") {
+					if (nameMain.value != "" && !nameMain.value.includes(":") && !nameMain.value.includes("/")) {
+						if (roomMain.value != "" && !roomMain.value.includes("/")) {
+							if (roomMain.value.length >= 4 && roomMain.value.length < 12) {
+								get(child(ref(db), "nameclaiming/" + nameMain.value)).then((value) => {
+									value = value.val();
+
+									if (value !== null) {
+										if (passMain.value == value) {
+											name = nameMain.value
+											roomid = roomMain.value;
+
+											let actualchatdelimiter;
+
+											if (chatdelimiter == "oneline") {
+												actualchatdelimiter = "<br>";
+											} else if (chatdelimiter == "twoline") {
+												actualchatdelimiter = "<br><br>";
+											} else if (chatdelimiter == "horizontalline") {
+												actualchatdelimiter = "<br><hr>";
+											} else if (chatdelimiter == "horizontallinespace") {
+												actualchatdelimiter = "<br><br><hr><br>";
+											}
+
+											changeScreen("chat");
+											roomChat.innerText = roomid;
+											onValue(ref(db, roomid), function(snapshot) {
+												if (snapshot.val() !== null) {
+													chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+												}
+											});
+										} else {
+											Swal.fire({
+												title: "Incorrect Password",
+												text: "The password you have entered is incorrect.",
+												icon: "error"
+											});
+										}
+									} else {
+										name = nameMain.value
+										roomid = roomMain.value;
+
+										let actualchatdelimiter;
+
+										if (chatdelimiter == "oneline") {
+											actualchatdelimiter = "<br>";
+										} else if (chatdelimiter == "twoline") {
+											actualchatdelimiter = "<br><br>";
+										} else if (chatdelimiter == "horizontalneline") {
+											actualchatdelimiter = "<br><hr>";
+										} else if (chatdelimiter == "horizontallinespace") {
+											actualchatdelimiter = "<br><br><hr><br>";
+										}
+										
+										changeScreen("chat");
+										roomChat.innerText = roomid;
+										onValue(ref(db, roomid), function(snapshot) {
+											if (snapshot.val() !== null) {
+												chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+											}
+										});
+									}
+								});
+							} else {
+								Swal.fire({
+									title: "Invalid Room ID",
+									text: "Room IDs must be at least 4 characters and less than 12 characters long.",
+									icon: "warning"
+								});
+							}
+						} else {
+							Swal.fire({
+								title: "Invalid Room ID",
+								text: "Please enter a valid Room ID. Room IDs cannot include the symbol '/', nor can it be blank.",
+								icon: "warning"
+							});
+						}
+					} else {
+						Swal.fire({
+							title: "Invalid Name",
+							text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+							icon: "warning"
+						});
+					}
+				} else if (np == "public") {
+					if (namePublic.value != "" && !namePublic.value.includes(":") && !namePublic.value.includes("/")) {
+						get(child(ref(db), "nameclaiming/" + namePublic.value)).then((value) => {
+							value = value.val();
+
+							if (value !== null) {
+								if (passPublic.value == value) {
+									name = namePublic.value
+									roomid = publicroomid;
+
+									let actualchatdelimiter;
+
+									if (chatdelimiter == "oneline") {
+										actualchatdelimiter = "<br>";
+									} else if (chatdelimiter == "twoline") {
+										actualchatdelimiter = "<br><br>";
+									} else if (chatdelimiter == "horizontalline") {
+										actualchatdelimiter = "<br><hr>";
+									} else if (chatdelimiter == "horizontallinespace") {
+										actualchatdelimiter = "<br><br><hr><br>";
+									}
+									
+									changeScreen("chat");
+									roomChat.innerText = publicroomdisplay(roomid);
+									onValue(ref(db, roomid), function(snapshot) {
+										if (snapshot.val() !== null) {
+											chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+										}
+									});
+								} else {
+									Swal.fire({
+										title: "Incorrect Password",
+										text: "The password you have entered is incorrect.",
+										icon: "error"
+									});
+								}
+							} else {
+								name = namePublic.value
+								roomid = publicroomid;
+
+								let actualchatdelimiter;
+
+								if (chatdelimiter == "oneline") {
+									actualchatdelimiter = "<br>";
+								} else if (chatdelimiter == "twoline") {
+									actualchatdelimiter = "<br><br>";
+								} else if (chatdelimitehorizontal= "oneline") {
+									actualchatdelimiter = "<br><hr>";
+								} else if (chatdelimiter == "horizontallinespace") {
+									actualchatdelimiter = "<br><br><hr><br>";
+								}
+								
+								changeScreen("chat");
+								roomChat.innerText = publicroomdisplay(roomid);
+								onValue(ref(db, roomid), function(snapshot) {
+									if (snapshot.val() !== null) {
+										chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+									}
+								});
+							}
+						});
+					} else {
+						Swal.fire({
+							title: "Invalid Name",
+							text: "Please enter a valid name. Names cannot include the symbols '/' or ':', nor can it be blank.",
+							icon: "warning"
+						});
+					}
+				}
+			}
+
+			enterMain.onclick = () => {enterChat("normal")};
+			enterPublic.onclick = () => {enterChat("public")};
+
+			function publicroomdisplay(romid) {
+				let retromid = "General Public";
+				switch (romid) {
+					case "public192m1cr3cqr":
+						retromid = "General Public";
+						break;
+					case "answerpublic192m1cr3cqr":
+						retromid = "Answer Sharing";
+						break;
+					case "proxypublic192m1cr3cqr":
+						retromid = "Proxy Sharing";
+						break;
+					case "gamepublic192m1cr3cqr":
+						retromid = "Game Sharing";
+						break;
+					case "gensharepublic192m1cr3cqr":
+						retromid = "General Sharing";
+						break;
+					case "forgotpasspublic192m1cr3cqr":
+						retromid = "Forgot my Password";
+						break;
+				}
+				return retromid;
+			}
+		</script>
+
+
+
+
+
+		<script>		
+			const screens = {
+   				main: `<h1>Chat App 3.0</h1><div><button class="btn elemn" id="tutor" onclick="changeScreen('help');">How To Use</button><button class="btn elemn" style="margin-left: 10px; background-color: #EEE;" id="settingsMain" onclick="changeScreen('settings')">Settings</button></div><br><input class="inp elemn" id="nameMain" placeholder="Enter a nickname here..."><input class="inp elemn" id="passMain" placeholder="Enter password"><input class="inp elemn" id="roomMain" placeholder="Enter Room ID here..."><p>Don't have a Room ID? <span id="publicMain" onclick="changeScreen('public');"> Go to a public room</span></p><button class="btn elemn" id="enterMain">Enter</button><br><button class="btn elemn" id="claimMain" onclick="changeScreen('nameclaimer');">Claim a name</button><div id="notifrowMain" style="display: flex; flex: 0 0 auto"><button class="btn elemn" id="notifMain" onclick="changeScreen('notifications');">Notifications</button><img id="nalertMain" width="25px" height="25px" draggable="false" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Error.svg/2198px-Error.svg.png"><svg id="nloadMain" class="load" height="25px" viewBox="0 0 32 32" width="25px"><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke: rgb(68, 68, 68); opacity: 0.2;"></circle><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke: rgb(68, 68, 68); stroke-dasharray: 80; stroke-dashoffset: 60;"></circle></svg></div><button class="btn elemn" id="saveMain" onclick="changeScreen('namesaver');">Save a name</button>`,
+    			help: `<h1>Chat App 3.0</h1><p>Click on an item to learn more about it.</p><button class="btn elemn" id="backHelp" onclick="changeScreen('main');">Back</button><br><button class="inp2 elemn" id="nameHelp">Enter a nickname here...</button><button class="inp2 elemn" id="passHelp">Enter password</button><button class="inp2 elemn" id="roomHelp">Enter Room ID here...</button><p id="publicHelp">Don't have a Room ID? <span id="publicspanHelp"> Go to a public room</span></p><button class="btn elemn" id="enterHelp">Enter</button><br><button class="btn elemn" id="claimHelp">Claim a name</button><div id="notifrowHelp" style="display: flex; flex: 0 0 auto"><button class="btn elemn" id="notifHelp">Notifications</button><img width="25px" height="25px" draggable="false" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Error.svg/2198px-Error.svg.png"><svg class="load" height="25px" viewBox="0 0 32 32" width="25px"><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke: rgb(68, 68, 68); opacity: 0.2;"></circle><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke: rgb(68, 68, 68); stroke-dasharray: 80; stroke-dashoffset: 60;"></circle></svg></div><button class="btn elemn" id="saveHelp">Save a name</button>`,
+	    		public: `<h1>Go with the public</h1><table id="optPublic"><tr class="rowPublic"><td class="puboption" id="genpub" data-optname=""><p class="puboptionhead">General Public</p><p class="puboptiontext">The main public chat.</p></td><td class="puboption" id="anssha" data-optname="answer"><p class="puboptionhead">Answer Sharing</p><p class="puboptiontext">Share answers here.</p></td><td class="puboption" id="prosha" data-optname="proxy"><p class="puboptionhead">Proxy Sharing</p><p class="puboptiontext">Share proxy links here.</p></td></tr><tr class="rowPublic"><td class="puboption" id="gamsha" data-optname="game"><p class="puboptionhead">Game Sharing</p><p class="puboptiontext">Share game links here.</p></td><td class="puboption" id="gensha" data-optname="genshare"><p class="puboptionhead">General Sharing</p><p class="puboptiontext">Share whatever you want here.</p></td><td class="puboption" id="forpas" data-optname="forgotpass"><p class="puboptionhead">Forgot my Password</p><p class="puboptiontext">Request a password reset here.</p></td></tr></table><input class="inp elemn" id="namePublic" placeholder="Enter a nickname here..."><input class="inp elemn" id="passPublic" placeholder="Enter password"><button class="btn elemn" id="enterPublic">Enter</button><br><br><br><br><br><button class="btn elemn" id="backPublic" onclick="changeScreen('main');">&lt;-- Back</button>`,
+				chat: `<h1 id="roomChat"></h1><div class="textDisplay" id="chatChat"></div><div id="inputChat"><input class="inp elemn" id="msgChat" placeholder="Enter message here..."><button class="btn elemn" id="sendChat">Send</button></div>`,
+	    		notifications: `<button class="btn elemn" id="backNotif" onclick="changeScreen('main');">&lt;-- Back</button><h1>Notifications</h1><input class="inp elemn" id="nameNotif" placeholder="Enter a nickname here..."><input class="inp elemn" id="passNotif" placeholder="Enter password"><p style="font-size: 85%; margin: 12px auto auto auto">Add or remove RoomID’s that you want to be notified about.</p><input class="inp elemn" id="roomNotif" placeholder="Room ID"><div><button class="btn elemn" id="addNotif" onclick="addRoomId();">Add</button><button class="btn elemn" id="removeNotif" onclick="removeRoomId();">Remove</button></div><button class="btn elemn" id="clearNotif" onclick="clearNotifications();">Clear Notifications</button><p style="width: 90%; margin: 12px auto auto auto" id="idlistNotif"></p><div class="textDisplay" id="listNotif"></div>`,
+			    nameclaimer: `<h1>Claim your name</h1><input class="inp elemn" id="nameClaim" placeholder="Enter a nickname here..."><input class="inp elemn" id="passClaim" placeholder="Enter password"><button class="btn elemn" id="claimClaim" onclick="claim();">Claim</button><br><button class="btn elemn" id="changeClaim" onclick="changeScreen('passchanger');">Change Password</button><br><br><button class="btn elemn" id="backClaim" onclick="changeScreen('main');">&lt;-- Back</button>`,
+    			passchanger: `<h1>Change Password</h1><input class="inp elemn" id="nameChange" placeholder="Enter nickname"><input class="inp elemn" id="oldpassChange" placeholder="Enter old password"><input class="inp elemn" id="newpassChange" placeholder="Enter new password"><input class="inp elemn" id="confirmpassChange" placeholder="Confirm new password"><button class="btn elemn" id="changeChange" onclick="changePassword();">Change</button><br><br><button class="btn elemn" id="backChange" onclick="changeScreen('nameclaimer');">&lt;-- Back</button>`,
+		    	namesaver: `<h1>Save a Name</h1><input class="inp elemn" id="nameSave" placeholder="Enter a nickname here..."><input class="inp elemn" id="passSave" placeholder="Enter password"><button class="btn elemn" id="saveSave">Save</button><button class="btn elemn" id="unsaveSave">Unsave</button><br><br><br><br><br><button class="btn elemn" id="backSave" onclick="changeScreen('main');">&lt;-- Back</button>`,
+				settings: `<h1>Settings</h1><button class="btn elemn" id="backSettings" onclick="changeScreen('main');">&lt;-- Back</button><table id="optSettings"><tr><td class="descSettings">Chat and Notification text size</td><td class="checkSettings"><select id="textsizeSettings"><option value="8px">8px</option><option value="9px">9px</option><option value="10px">10px</option><option value="11px">11px</option><option value="12px">12px</option><option value="13px">13px</option><option value="14px">14px</option><option value="15px" selected>15px</option><option value="16px">16px</option><option value="17px">17px</option><option value="18px">18px</option><option value="19px">19px</option><option value="20px">20px</option><option value="21px">21px</option><option value="22px">22px</option><option value="23px">23px</option><option value="24px">24px</option><option value="25px">25px</option></select></td></tr><tr><td class="descSettings">Chat and Notification font</td><td class="checkSettings"><select id="fontSettings"><option value="Arial, Helvetica, sans-serif">Arial</option><option value="'Courier New', Courier, monospace">Courier New</option><option value="'Times New Roman', Times, serif">TN Roman</option><option value="Georgia, 'Times New Roman', Times, serif">Georgia</option><option value="'Outfit', sans-serif" selected>Outfit</option><option value="'Roboto Slab', serif">Roboto Slab</option><option value="'Josefin Sans'">Josefin Sans</option></select></td></tr><tr><td class="descSettings">Seperate lines in chat with</td><td class="checkSettings"><select id="chatdelimiterSettings"><option value="oneline">1 space</option><option value="twoline" selected>2 spaces</option><option value="horizontalline">Line</option><option value="horizontallinespace">Line w/spaces</option></select></td></tr><tr><td class="descSettings">Background color</td><td class="checkSettings"><input id="bgSettings" type="color" value="#8CD8FF"></td></tr><tr><td class="descSettings">Show date and time (in messages)</td><td class="checkSettings"><input id="dntSettings" type="checkbox" checked></td></tr><tr><td class="descSettings">Hide password</td><td class="checkSettings"><input id="hidepassSettings" type="checkbox"></td></tr></table><p>(Refresh for some updated changes)</p><div><button id="saveSettings" style="margin-right: 5px;" class="btn elemn">Save Settings to name</button><button id="savelocalSettings" style="margin-left: 5px;" class="btn elemn">Save Settings Locally</button></div><div><button id="unsaveglobalSettings" class="btn elemn" style="margin-right: 5px;">Reset Global Settings</button><button id="unsavelocalSettings" style="margin-left: 5px;" class="btn elemn">Reset Local Settings</button></div>`
+			};
+
+			let name = "";
+			let roomid = "";
+			let publicroomid = "public192m1cr3cqr";
+
+			let chatdelimiter = "twoline";
+			let dnt = true;
+
+			for (var i = 0; i < Object.keys(screens).length; i++) {
+				let currScreenName = Object.keys(screens)[i];
+				document.getElementsByTagName("body")[0].innerHTML = `<div id="` + currScreenName + `" class="con">` + Object.values(screens)[i] + `</div>` + document.getElementsByTagName("body")[0].innerHTML;
+			}
+
+			// --------------------
+			// Screen information
+			// --------------------
+
+			// Main screen
+
+			let tutor = document.getElementById("tutor");
+			let nameMain = document.getElementById("nameMain");
+			let passMain = document.getElementById("passMain");
+			let roomMain = document.getElementById("roomMain");
+			let enterMain = document.getElementById("enterMain");
+			let claimMain = document.getElementById("claimMain");
+			let notifMain = document.getElementById("notifMain");
+			let nalertMain = document.getElementById("nalertMain");
+			let nloadMain = document.getElementById("nloadMain");
+			let saveMain = document.getElementById("saveMain");
+			let publicMain = document.getElementById("publicMain");
+
+			// Help screen
+
+			document.getElementById("nameHelp").onclick = function() {Swal.fire({text: "Every message that you send will be under this nickname, which will be shown publicly."})};
+			document.getElementById("passHelp").onclick = function() {Swal.fire({text: "This password box will automatically appear if the name you have entered has a registered password."})};
+			document.getElementById("roomHelp").onclick = function() {Swal.fire({text: "A room ID is a 4-11 character long code where each room ID acts like its own group chat."})};
+			document.getElementById("enterHelp").onclick = function() {Swal.fire({text: "This button will take you to the designated room ID with the designated name."})};
+			document.getElementById("claimHelp").onclick = function() {Swal.fire({text: "Here you can password protect a name. This is useful to avoid the impersonation of you and any others using this platform."})};
+			document.getElementById("notifHelp").onclick = function() {Swal.fire({text: "You can specify a selection of room ID’s under a name that you want to be notified about. If you save your name, there are icon notification guides on the main screen."})};
+			document.getElementById("saveHelp").onclick = function() {Swal.fire({text: "Saving a name, with a password if needed, will autofill these inputs every time you open the Chat App or any of its pages. This will also improve the notification feature for your usage."})};
+			let notifrowHelp = document.querySelectorAll("#notifrowHelp *");
+			for (let i = 1; i < notifrowHelp.length; i++) {
+				notifrowHelp[i].onclick = function() {Swal.fire({text: "The exclamation mark alerts you if you have unseen notifications. The loading icon is a way to tell that the program is fetching your notifications from the database."})};
+			}
+			document.getElementById("publicHelp").onclick = function() {Swal.fire({text: "This is a public group chat accessible to anyone using the Chat App. You do not need a room ID to access the public group chat."})};
+			let helpItems = document.querySelectorAll("#help *");
+			for (let i = 0; i < helpItems.length; i++) {
+				helpItems[i].style.cursor = "pointer";
+			}
+
+			// Public screen
+
+			let optionsPublic = document.getElementsByClassName("puboption");
+			let enterPublic = document.getElementById("enterPublic");
+
+			function selectoptionPublic(elem)  {
+				let alloptionsPublic = document.getElementsByClassName("puboption");
+				for (theoptionPublic of alloptionsPublic) {
+					theoptionPublic.style.color = "black";
+					theoptionPublic.style.border = "2px solid black";
+				}
+
+				elem.style.color = "#F5B623";
+				elem.style.border = "2px solid #F5B623";
+				
+				publicroomid = elem.dataset.optname + "public192m1cr3cqr";
+			}
+
+			for (optionPublic of optionsPublic) {
+				let currelem = document.getElementById(optionPublic.id);
+				optionPublic.addEventListener("click", () => {selectoptionPublic(currelem)});
+			}
+
+			// Chat screen
+
+			let roomChat = document.getElementById("roomChat");
+			let chatChat = document.getElementById("chatChat");
+			let msgChat = document.getElementById("msgChat");
+			let sendChat = document.getElementById("sendChat");
+
+			// Notifications screen
+
+			let nameNotif = document.getElementById("nameNotif");
+			let passNotif = document.getElementById("passNotif");
+			let roomNotif = document.getElementById("roomNotif");
+			let addNotif = document.getElementById("addNotif");
+			let removeNotif = document.getElementById("removeNotif");
+			let clearNotif = document.getElementById("clearNotif");
+			let idlistNotif = document.getElementById("idlistNotif");
+			let listNotif = document.getElementById("listNotif");
+
+			// Name claimer screen
+
+			let nameClaim = document.getElementById("nameClaim");
+			let passClaim = document.getElementById("passClaim");
+			let claimClaim = document.getElementById("claimClaim");
+
+			// Password changer screen
+
+			let nameChange = document.getElementById("nameChange");
+			let oldpassChange = document.getElementById("oldpassChange");
+			let newpassChange = document.getElementById("newpassChange");
+			let confirmpassChange = document.getElementById("confirmpassChange");
+			let changeChange = document.getElementById("changeChange");
+
+			// Name saver screen
+
+			let saveSave = document.getElementById("saveSave");
+			let unsaveSave = document.getElementById("unsaveSave");
+
+			// Settings screen
+
+			let textsizeSettings = document.getElementById("textsizeSettings");
+			let fontSettings = document.getElementById("fontSettings");
+			let chatdelimiterSettings = document.getElementById("chatdelimiterSettings");
+			let bgSettings = document.getElementById("bgSettings");
+			let dntSettings = document.getElementById("dntSettings");
+			let hidepassSettings = document.getElementById("hidepassSettings");
+			let saveSettings = document.getElementById("saveSettings");
+			let savelocalSettings = document.getElementById("savelocalSettings");
+			let unsavelocalSettings = document.getElementById("unsavelocalSettings");
+			let unsaveglobalSettings = document.getElementById("unsaveglobalSettings");
+
+			// Switch between screens
+
+			function changeScreen(screenName) {
+				for (var i = 0; i < Object.keys(screens).length; i++) {
+					if (screenName == Object.keys(screens)[i]) {
+						document.getElementById(Object.keys(screens)[i]).style.display = "flex";
+					} else {
+						document.getElementById(Object.keys(screens)[i]).style.display = "none";
+					}
+				}
+
+				if (screenName == "notifications") {
+					nalertMain.style.display = "none";
+				}
+			}
+		</script>
+	</body>
+</html>
