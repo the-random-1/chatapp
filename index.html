@@ -1059,6 +1059,9 @@
 											onValue(ref(db, roomid), function(snapshot) {
 												if (snapshot.val() !== null) {
 													chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+													if (localStorage.name && localStorage.name != "") {
+														saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+													}
 												}
 											});
 										} else {
@@ -1089,6 +1092,9 @@
 										onValue(ref(db, roomid), function(snapshot) {
 											if (snapshot.val() !== null) {
 												chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+												if (localStorage.name && localStorage.name != "") {
+													saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+												}
 											}
 										});
 									}
@@ -1141,6 +1147,9 @@
 									onValue(ref(db, roomid), function(snapshot) {
 										if (snapshot.val() !== null) {
 											chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+											if (localStorage.name && localStorage.name != "") {
+												saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+											}
 										}
 									});
 								} else {
@@ -1171,6 +1180,9 @@
 								onValue(ref(db, roomid), function(snapshot) {
 									if (snapshot.val() !== null) {
 										chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
+										if (localStorage.name && localStorage.name != "") {
+											saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+										}
 									}
 								});
 							}
