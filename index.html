@@ -1063,7 +1063,11 @@
 												if (snapshot.val() !== null) {
 													chatChat.innerHTML = hidednt(Object.values(snapshot.val())).join(actualchatdelimiter);
 													if (localStorage.name && localStorage.name != "") {
-														saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+														get(child(ref(db), "usernotifications/" + localStorage.name + "/notificationlist/list")).then((notifsslist) => {
+															if (notifsslist.val().split("«").includes(roomid)) {
+																saveData("usernotifications/" + localStorage.name + "/" + roomid + "/msgnum", Object.values(snapshot.val()).length);
+															}
+														});
 													}
 												}
 											});
