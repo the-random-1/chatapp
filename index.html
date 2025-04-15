@@ -293,7 +293,7 @@
 			}
 
 			document.addEventListener("keydown", e => {
-				if (e.key() == Enter && currscreen == "chat" && msgChat.value != "") {
+				if (e.key == "Enter" && currscreen == "chat" && msgChat.value != "") {
 					get(child(ref(db), roomid)).then((indexofmsg) => {
 						if (indexofmsg.val() !== null) {
 							indexofmsg = Object.keys(indexofmsg.val()).length;
