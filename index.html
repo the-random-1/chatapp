@@ -293,43 +293,51 @@
 			}
 
 			document.addEventListener("keydown", e => {
-				if (e.key == "Enter" && currscreen == "chat" && msgChat.value != "") {
-					get(child(ref(db), roomid)).then((indexofmsg) => {
-						if (indexofmsg.val() !== null) {
-							indexofmsg = Object.keys(indexofmsg.val()).length;
-						} else {
-							indexofmsg = 0;
-						}
-	
-						const d = new Date();
-	
-						let ampm = "AM";
-	
-						let year = d.getFullYear();
-						let month = d.getMonth() + 1;
-						let date = d.getDate();
-	
-						let hour = d.getHours();
-						if (hour >= 12) {
-							ampm = "PM";
-							if (hour != 12) {
-								hour -= 12;
+				if (e.key == "Enter") {
+					if (currscreen == "chat" && msgChat.value != "") {
+						get(child(ref(db), roomid)).then((indexofmsg) => {
+							if (indexofmsg.val() !== null) {
+								indexofmsg = Object.keys(indexofmsg.val()).length;
+							} else {
+								indexofmsg = 0;
 							}
-						} else if (hour == 0) {
-							hour = 12;
-						}
-						let minute = d.getMinutes();
-						if (minute < 10) {
-							minute = "0" + String(minute);
-						}
-	
-						let datentime = ` (${month}/${date}/${year} ${hour}:${minute} ${ampm})`;
-	
-						saveData(roomid + "/" + indexofmsg, name + ": " + msgChat.value + datentime);
-	
-						msgChat.value = "";
-						sendChat.style.display = "none";
-					});
+		
+							const d = new Date();
+		
+							let ampm = "AM";
+		
+							let year = d.getFullYear();
+							let month = d.getMonth() + 1;
+							let date = d.getDate();
+		
+							let hour = d.getHours();
+							if (hour >= 12) {
+								ampm = "PM";
+								if (hour != 12) {
+									hour -= 12;
+								}
+							} else if (hour == 0) {
+								hour = 12;
+							}
+							let minute = d.getMinutes();
+							if (minute < 10) {
+								minute = "0" + String(minute);
+							}
+		
+							let datentime = ` (${month}/${date}/${year} ${hour}:${minute} ${ampm})`;
+		
+							saveData(roomid + "/" + indexofmsg, name + ": " + msgChat.value + datentime);
+		
+							msgChat.value = "";
+							sendChat.style.display = "none";
+						});
+					}
+
+					if (currscreen == "main") {
+						enterChat("normal");
+					} else if (currscreen == "public") {
+						enterChat("public");
+					}
 				}
 			});
 
